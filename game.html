@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Game Play </title>
+  <style>
+    body, html{  width: 100%;   height: 100%;         }
+    body, h2, button{    margin: 0;    padding: 0;    }
+    img{  display: block;                             }
+    button{   border: 0;   background-color: transparent;      }
+    body{  
+      background:#5ca1d9;  display: flex;  justify-content: center;  align-items: center;
+      overflow:hidden;
+    }
+    section{
+      width: 1024px;   height: 768px;  background:#fff;   border:1px solid #999;
+    }
+    .play{     position:relative;    }
+    .play > h2{   width: 238px;   height: 146px;    margin:12px auto 0;     }
+    .play > .play_area{
+      width: 512px;   height: 332px;   margin:108px auto 0;  
+      display: flex;  flex-flow:row wrap;  justify-content: space-between;   align-content: space-between;
+      column-gap: 115px;   row-gap:28px;
+    }
+    .play > .play_area > div{
+      width:94px;   height:92px;   background:url("./img/Bob_hide.png") no-repeat;
+    }
+    .play > .play_area > div > .minions{
+      width:100%;   height:100%;   /*  border-radius, overflow */
+    }
+    .play > .play_area > div > .minions > img{   display:none;   }
+    .play > .score{
+      width:126px;   font-size:28px;   text-align:center;  font-weight:bold;  color:#f60;
+      background:url("./img/play_score.png") no-repeat center top;   padding-top:30px;
+      position:absolute;   left:150px;   top:150px;
+    }
+    .play > .time{
+      width:111px;   padding-top:34px;   text-align: center;  font-size:28px;  font-weight: bold;  color:#269;
+      background:url("./img/time.png") no-repeat center top;  
+      position:absolute;  right:150px;  top:150px;
+    }
+
+    .end{   display:none;    }
+    .end > h2{   width:238px;   height:113px;   margin:27px auto 0;     }
+    .end > .score{
+      width:172px;   background:url("./img/result_score.png") no-repeat;  padding-top:44px;
+      text-align: center;  font-weight: bold;  font-size: 64px;   color: #fc0;
+      margin:46px auto 60px;
+    }
+    .end > .again{
+      width: 277px;   height: 47px;   display: block;   margin:0 auto;
+    }
+    .hammer{   
+      position:absolute;  left:0px;   top:0px;   z-index: 1000;   transition:transform .05s;
+      pointer-events: none;   /* background:#269 */
+    }
+    .hammer > img{   width: 150px;   height: auto;   margin:-170px 0 0 60px;  }
+  </style>
+</head>
+<body>
+  <section class="play">
+    <h2><img src="./img/play_title.png" alt="minions"></h2>
+    <div class="play_area">
+      <div class="m1">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m2">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m3">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m4">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m5">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m6">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m7">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m8">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+      <div class="m9">
+        <div class="minions"><img src="./img/Bob_show.png" alt=""></div>
+      </div>
+    </div>
+    <p class="score">0</p>
+    <p class="time">0</p>
+  </section>
+  <section class="end">
+    <h2><img src="./img/result_title.png" alt="minions"></h2>
+    <p class="score">0</p>
+    <button class="again"><img src="./img/again.png" alt="again?"></button>
+  </section>
+  <span class="hammer"><img src="./img/hammer.png" alt=""></span>
+  <script>
+    const hammer = document.querySelector('.hammer');
+    document.addEventListener('mousemove', (e)=>{
+      hammer.style.left = e.clientX+'px';  //pageX(문서기준), offsetX(요소기준), clientX(브라우저 화면,뷰포트 기준)
+      hammer.style.top = e.clientY+'px';
+    });
+    document.addEventListener('mousedown', ()=>{
+      hammer.style.transform = 'rotate(-68deg)';
+    });
+    document.addEventListener('mouseup', ()=>{
+      hammer.style.transform = 'rotate(0deg)';
+    });
+    const timeArea = document.querySelector('.time');
+    const scoreArea = document.querySelector('.score');
+    const playStage = document.querySelector('.play');
+    const resultStage = document.querySelector('.end');  
+    
+    const countDownDisplay = document.createElement('div'); // countDownDisplay.classList.add('countdown')
+    countDownDisplay.style.position = 'fixed';
+    countDownDisplay.style.top = '0px';
+    countDownDisplay.style.left = '0px';
+    countDownDisplay.style.width = '100vw';
+    countDownDisplay.style.height = '100vh';
+    countDownDisplay.style.zIndex = '10000';
+    countDownDisplay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    countDownDisplay.style.display = 'flex';
+    countDownDisplay.style.justifyContent = 'center';
+    countDownDisplay.style.alignItems = 'center';
+    countDownDisplay.style.fontSize = '100px';
+    countDownDisplay.style.color = '#ffffff';
+    countDownDisplay.style.fontWeight = 'bold';
+    document.body.appendChild( countDownDisplay );
+    hammer.style.display = 'none';
+    let startCountDown = 5;
+
+    const startCount=()=>{
+      countDownDisplay.innerHTML = startCountDown;
+      startCountDown--;
+      if( startCountDown === -1 ){
+        countDownDisplay.innerHTML = 'START'
+      }
+      if( startCountDown < -1 ){
+        clearInterval( gameBegin );
+        startGame();
+      }
+    }
+    startCount();
+    let gameBegin = setInterval( startCount, 1000 );
+
+    let playTime = 10;
+    let gameScore = 0;
+    let nameNum = 0; // .m~ 이름 숫자 랜덤정의 변수
+    let clickable = false;// 1번만 클릭할 수있게 구분하는 (연속클릭방지) 상태변수 선언 ( true/false )
+    let timer;
+    let targetTimer;
+
+    const startGame=()=>{
+      hammer.style.display = 'block';
+      document.body.style.cursor = 'none';
+      countDownDisplay.style.display = 'none';
+      scoreArea.innerHTML = gameScore;
+      countDown();    
+      timer = setInterval( countDown, 1000 );
+      targetTimer = setInterval(randomTarget, 1000);
+    }
+    
+    const countDown=()=>{
+      timeArea.innerHTML = playTime;
+      playTime--;
+      if( playTime<0 ){
+        clearInterval(timer);
+        clearInterval(targetTimer);
+        playStage.style.display = 'none';
+        resultStage.style.display = 'block';
+        document.querySelector('.end .score').innerHTML = gameScore*10;
+        hammer.style.display = 'none';
+        document.body.style.cursor = 'default';
+      }
+    }
+    
+    const randomTarget=()=>{
+      nameNum = Math.ceil( Math.random()*9 )// 1~9 사이 정수 랜덤   Math.floor( Math.random()*9 )+1
+      const target = document.querySelector(`.m${nameNum} img`);
+      target.style.display = 'block';
+      clickable = true; // 보여지는 순간 클릭가능한 상태로 변수 선언
+      setTimeout(()=>{  target.style.display='none';  clickable=false; }, 800); // 0.8초 뒤에 사라지는 명령 : 시간=난이도
+    }
+    
+    document.querySelectorAll('.minions>img').forEach((img)=>{ // 배열요소에 클릭이벤트 적용  forEach함수 활용
+      img.addEventListener('mousedown', ()=>{
+        if( clickable ){ // true일때만 실행
+          gameScore++;
+          scoreArea.innerHTML = gameScore*10;
+          clickable = false;  // 클릭한번 이후는 클릭가능상태 해제( false선언 )
+        }
+      });
+    });
+
+    document.querySelector('.end .again').addEventListener('click',()=>{
+      window.location.reload();
+      // 모든 변수값 초기값으로 재 선언( 시간:10초,점수:0 )후 출력, 카운트다운 재시작, 랜덤타겟 재시작
+    })
+  </script>
+</body>
+</html>
